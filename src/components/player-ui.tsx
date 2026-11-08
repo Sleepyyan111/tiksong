@@ -147,7 +147,7 @@ export function NowPlaying() {
         </div>
 
         <div className="mt-6">
-          <Slider value={[p.time]} max={p.duration || 1} step={0.1} onValueChange={([v]) => p.seek(v)} />
+          <Slider value={[p.time]} max={p.duration || 1} step={0.1} onValueChange={([v]) => p.seek(v ?? 0)} />
           <div className="mt-2 flex justify-between type-time">
             <span>{formatTime(p.time)}</span>
             <span>-{formatTime(Math.max(0, p.duration - p.time))}</span>
@@ -179,7 +179,7 @@ export function NowPlaying() {
 
         <div className="mt-6 flex items-center gap-3 text-muted-foreground">
           <Volume2 className="h-4 w-4 shrink-0" />
-          <Slider value={[p.volume]} max={1} step={0.01} onValueChange={([v]) => p.setVolume(v)} />
+          <Slider value={[p.volume]} max={1} step={0.01} onValueChange={([v]) => p.setVolume(v ?? 1)} />
         </div>
       </div>
     </div>

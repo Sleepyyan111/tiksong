@@ -46,7 +46,7 @@ function PlaylistPage() {
     const from = tracks.findIndex((t) => t.id === e.active.id);
     const to = tracks.findIndex((t) => t.id === e.over!.id);
     const moved = arrayMove(tracks, from, to);
-    const before = moved[to - 1]?.position ?? moved[to + 1].position - 2;
+    const before = moved[to - 1]?.position ?? (moved[to + 1]?.position ?? 0) - 2;
     const after = moved[to + 1]?.position ?? before + 2;
     const pos = (before + after) / 2;
     qc.setQueryData<Track[]>(["tracks"], (old) =>
@@ -93,7 +93,7 @@ function PlaylistPage() {
       {tracks.length > 0 && (
         <div className="mt-5 flex gap-2">
           <button
-            onClick={() => (player.current ? player.toggle() : player.playTrack(tracks[0].id))}
+            onClick={() => (player.current ? player.toggle() : player.playTrack(tracks[0]!.id))}
             className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
           >
             <Play className="h-4 w-4 fill-current" /> {player.playing ? "Pause" : "Play"}
@@ -101,7 +101,7 @@ function PlaylistPage() {
           <button
             onClick={() => {
               if (!player.shuffle) player.toggleShuffle();
-              player.playTrack(tracks[Math.floor(Math.random() * tracks.length)].id);
+              player.playTrack(tracks[Math.floor(Math.random() * tracks.length)]!.id);
             }}
             className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary text-sm font-semibold text-primary"
           >

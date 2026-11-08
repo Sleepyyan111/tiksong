@@ -25,7 +25,7 @@ function HistoryPage() {
 
   const setRemoved = async (t: Track, removed: boolean) => {
     const { error } = await supabase.from("tracks").update({ removed }).eq("id", t.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["tracks"] });
     toast.success(removed ? "Removed from Song" : "Restored to Song");
   };
@@ -33,7 +33,7 @@ function HistoryPage() {
   const purge = async (t: Track) => {
     await supabase.storage.from("audio").remove([t.audio_path, ...(t.cover_path ? [t.cover_path] : [])]);
     const { error } = await supabase.from("tracks").delete().eq("id", t.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["tracks"] });
     toast("Deleted permanently");
   };

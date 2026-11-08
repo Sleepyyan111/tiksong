@@ -14,8 +14,8 @@ export type Track = {
   position: number;
   removed: boolean;
   created_at: string;
-  audioUrl?: string;
-  coverUrl?: string;
+  audioUrl?: string | undefined;
+  coverUrl?: string | undefined;
 };
 
 async function fetchTracks(): Promise<Track[]> {

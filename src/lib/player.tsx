@@ -107,10 +107,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (!queue.length) return null;
       if (auto && repeat === "one" && current) return current.id;
       if (shuffle && queue.length > 1) {
-        let n: Track;
+        let n: Track | undefined;
         do n = queue[Math.floor(Math.random() * queue.length)];
-        while (n.id === current?.id);
-        return n.id;
+        while (n?.id === current?.id);
+        return n?.id ?? null;
       }
       const i = queue.findIndex((t) => t.id === current?.id);
       let j = i + dir;
@@ -119,7 +119,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         j = 0;
       }
       if (j < 0) j = queue.length - 1;
-      return queue[j].id;
+      return queue[j]?.id ?? null;
     },
     [queue, current, shuffle, repeat],
   );
