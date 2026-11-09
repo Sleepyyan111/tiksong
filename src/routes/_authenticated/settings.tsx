@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Switch } from "@/components/ui/switch";
-import { ACCENTS, BACKGROUNDS, useSettings } from "@/lib/settings";
+import { ACCENTS, BACKGROUNDS, RADII, TEXT_SIZES, useSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -83,6 +83,12 @@ function SettingsPage() {
             ))}
           </div>
         </div>
+        <Row label="Corners">
+          <Segmented value={settings.radius} onChange={(radius) => update({ radius })} options={RADII.map((r) => ({ v: r.id as string, l: r.label }))} />
+        </Row>
+        <Row label="Text size">
+          <Segmented value={settings.textSize} onChange={(textSize) => update({ textSize })} options={TEXT_SIZES.map((t) => ({ v: t.id as string, l: t.label }))} />
+        </Row>
       </Group>
 
       <Group title="Playback">

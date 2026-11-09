@@ -4,7 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Check, ClipboardPaste, Loader2, Pause, Play, X } from "lucide-react";
-import { importTikTok, previewTikTok } from "@/lib/tiktok.functions";
+import { importTikTok } from "@/lib/tiktok.functions";
+import { resolveTikTok, type Resolved } from "@/lib/tiktok-resolve";
+import { supabase } from "@/integrations/supabase/client";
 import { extractTikTokUrl, formatTime } from "@/lib/tiktok-url";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +22,16 @@ export const Route = createFileRoute("/_authenticated/import")({
   component: ImportPage,
 });
 
-type Preview = Awaited<ReturnType<typeof previewTikTok>>;
+type Preview = Resolved & { alreadyImported: boolean };
+
+async function preview({ data }: { data: { url: string } }): Promise<Preview> {
+  const r = await resolveTikTok(data.url);
+  const { data: existing } = await supabase.from("tracks").select("id, removed").eq("tiktok_id", r.tiktokId).maybeSingle();
+  return { ...r, alreadyImported: !!existing && !existing.removed };
+}
 
 function ImportPage() {
   const qc = useQueryClient();
-  const preview = useServerFn(previewTikTok);
   const doImport = useServerFn(importTikTok);
   const [text, setText] = useState("");
   const [stage, setStage] = useState<"idle" | "reading" | "preview" | "saving" | "done">("idle");
@@ -73,12 +80,13 @@ function ImportPage() {
   };
 
   const confirm = async () => {
-    if (!url) return;
+    if (!url || !data) return;
     audio.current?.pause();
     setPreviewPlaying(false);
     setStage("saving");
     try {
-      const r = await doImport({ data: { url } });
+      const { alreadyImported: _a, ...resolved } = data;
+      const r = await doImport({ data: resolved });
       await qc.invalidateQueries({ queryKey: ["tracks"] });
       toast.success(r.duplicate ? "Already in Song" : "Added to Song");
       setStage("done");

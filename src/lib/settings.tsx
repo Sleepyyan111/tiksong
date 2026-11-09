@@ -7,6 +7,22 @@ export const ACCENTS = [
   { id: "lime", label: "Lime", value: "oklch(0.8 0.18 130)" },
   { id: "teal", label: "Teal", value: "oklch(0.72 0.12 185)" },
   { id: "sky", label: "Sky", value: "oklch(0.7 0.14 235)" },
+  { id: "violet", label: "Violet", value: "oklch(0.68 0.17 300)" },
+  { id: "mint", label: "Mint", value: "oklch(0.82 0.13 160)" },
+  { id: "gold", label: "Gold", value: "oklch(0.84 0.14 90)" },
+  { id: "mono", label: "Mono", value: "oklch(0.9 0 0)" },
+] as const;
+
+export const RADII = [
+  { id: "sharp", label: "Sharp", value: "0.25rem" },
+  { id: "soft", label: "Soft", value: "0.875rem" },
+  { id: "round", label: "Round", value: "1.4rem" },
+] as const;
+
+export const TEXT_SIZES = [
+  { id: "s", label: "S", value: "15px" },
+  { id: "m", label: "M", value: "16px" },
+  { id: "l", label: "L", value: "18px" },
 ] as const;
 
 export const BACKGROUNDS = [
@@ -14,6 +30,8 @@ export const BACKGROUNDS = [
   { id: "black", label: "Pure black", dark: "oklch(0 0 0)", light: "oklch(1 0 0)" },
   { id: "warm", label: "Warm", dark: "oklch(0.15 0.012 60)", light: "oklch(0.975 0.01 80)" },
   { id: "navy", label: "Deep sea", dark: "oklch(0.15 0.03 250)", light: "oklch(0.975 0.01 240)" },
+  { id: "forest", label: "Forest", dark: "oklch(0.16 0.025 150)", light: "oklch(0.975 0.012 140)" },
+  { id: "plum", label: "Plum", dark: "oklch(0.15 0.03 320)", light: "oklch(0.975 0.012 320)" },
 ] as const;
 
 export type Settings = {
@@ -23,6 +41,8 @@ export type Settings = {
   crossfade: boolean;
   resumePosition: boolean;
   quality: "high" | "standard";
+  radius: string;
+  textSize: string;
 };
 
 const DEFAULTS: Settings = {
@@ -32,6 +52,8 @@ const DEFAULTS: Settings = {
   crossfade: false,
   resumePosition: true,
   quality: "high",
+  radius: "soft",
+  textSize: "m",
 };
 
 const KEY = "tm-settings";
@@ -63,6 +85,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const v = bg ? (dark ? bg.dark : bg.light) : null;
       if (v) root.style.setProperty("--background", v);
       else root.style.removeProperty("--background");
+      root.style.setProperty("--radius", (RADII.find((r) => r.id === settings.radius) ?? RADII[1]).value);
+      root.style.fontSize = (TEXT_SIZES.find((t) => t.id === settings.textSize) ?? TEXT_SIZES[1]).value;
     };
     apply();
     const mq = matchMedia("(prefers-color-scheme: dark)");
