@@ -43,20 +43,18 @@ export type Settings = {
   quality: "high" | "standard";
   radius: string;
   textSize: string;
-  customAccent: string;
   playerColor: string | null;
 };
 
 const DEFAULTS: Settings = {
   theme: "dark",
-  accent: "coral",
+  accent: "cover",
   background: "default",
   crossfade: false,
   resumePosition: true,
   quality: "high",
   radius: "soft",
   textSize: "m",
-  customAccent: "#ff6b9d",
   playerColor: null,
 };
 
@@ -83,11 +81,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         settings.theme === "dark" ||
         (settings.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
       root.classList.toggle("dark", dark);
-      const accent =
-        settings.accent === "custom"
-          ? settings.customAccent
-          : (ACCENTS.find((a) => a.id === settings.accent) ?? ACCENTS[0]).value;
-      root.style.setProperty("--primary", accent);
+      // "cover" accent is applied by the player from the current song's artwork.
+      if (settings.accent !== "cover")
+        root.style.setProperty("--primary", (ACCENTS.find((a) => a.id === settings.accent) ?? ACCENTS[0]).value);
       const bg = BACKGROUNDS.find((b) => b.id === settings.background);
       const v = bg ? (dark ? bg.dark : bg.light) : null;
       if (v) root.style.setProperty("--background", v);

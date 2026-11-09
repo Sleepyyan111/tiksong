@@ -71,10 +71,9 @@ function SettingsPage() {
                 {settings.accent === a.id && <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />}
               </button>
             ))}
-            <label aria-label="Custom accent color" className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-border" style={settings.accent === "custom" ? { background: settings.customAccent, borderStyle: "solid" } : { background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}>
-              {settings.accent === "custom" && <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />}
-              <input type="color" value={settings.customAccent} onChange={(e) => update({ accent: "custom", customAccent: e.target.value })} className="absolute inset-0 opacity-0 cursor-pointer" />
-            </label>
+            <button aria-label="Match song cover" onClick={() => update({ accent: "cover" })} className={cn("flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold", settings.accent === "cover" ? "border-primary text-primary" : "border-border")}>
+              {settings.accent === "cover" && <Check className="h-3.5 w-3.5" strokeWidth={3} />} Match cover
+            </button>
           </div>
         </div>
         <div className="px-4 py-3">
