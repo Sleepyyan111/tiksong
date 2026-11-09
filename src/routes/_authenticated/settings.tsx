@@ -71,6 +71,24 @@ function SettingsPage() {
                 {settings.accent === a.id && <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />}
               </button>
             ))}
+            <label aria-label="Custom accent color" className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-border" style={settings.accent === "custom" ? { background: settings.customAccent, borderStyle: "solid" } : { background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}>
+              {settings.accent === "custom" && <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />}
+              <input type="color" value={settings.customAccent} onChange={(e) => update({ accent: "custom", customAccent: e.target.value })} className="absolute inset-0 opacity-0 cursor-pointer" />
+            </label>
+          </div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="type-body mb-1">Player color</div>
+          <div className="type-meta mb-3">Color behind the bottom player and full-screen player.</div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => update({ playerColor: null })} className={cn("rounded-xl border px-3 py-2 text-sm font-semibold", !settings.playerColor ? "border-primary text-primary" : "border-border")}>
+              From song cover
+            </button>
+            <label className={cn("relative flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold cursor-pointer", settings.playerColor ? "border-primary text-primary" : "border-border")}>
+              <span className="h-4 w-4 rounded-full border border-border" style={{ background: settings.playerColor ?? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }} />
+              Pick color
+              <input type="color" value={settings.playerColor ?? "#ff6b6b"} onChange={(e) => update({ playerColor: e.target.value })} className="absolute inset-0 opacity-0 cursor-pointer" />
+            </label>
           </div>
         </div>
         <div className="px-4 py-3">

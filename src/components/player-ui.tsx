@@ -36,10 +36,14 @@ export function Equalizer() {
 export function MiniPlayer() {
   const p = usePlayer();
   if (!p.current) return null;
+  const { settings } = useSettings();
   const pct = p.duration ? (p.time / p.duration) * 100 : 0;
   return (
     <div className="fixed inset-x-0 bottom-[68px] z-30 px-3">
-      <div className="glass mx-auto max-w-xl overflow-hidden rounded-2xl shadow-2xl shadow-background/60 border border-border">
+      <div
+        className="glass mx-auto max-w-xl overflow-hidden rounded-2xl shadow-2xl shadow-background/60 border border-border"
+        style={settings.playerColor ? { backgroundColor: `color-mix(in oklch, ${settings.playerColor} 45%, var(--background))` } : undefined}
+      >
         <div className="flex items-center gap-3 p-2 pr-3">
           <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => p.setNowPlayingOpen(true)}>
             <Cover track={p.current} className="h-11 w-11 shrink-0 rounded-lg" />
@@ -92,6 +96,7 @@ export function BottomNav() {
 export function NowPlaying() {
   const p = usePlayer();
   const [showQueue, setShowQueue] = useState(false);
+  const { settings } = useSettings();
   const t = p.current;
   return (
     <div
@@ -101,7 +106,9 @@ export function NowPlaying() {
       )}
       aria-hidden={!p.nowPlayingOpen}
     >
-      {t?.coverUrl && (
+      {settings.playerColor ? (
+        <div className="pointer-events-none absolute inset-0 opacity-40" style={{ background: `linear-gradient(to bottom, ${settings.playerColor}, transparent)` }} />
+      ) : t?.coverUrl && (
         <img src={t.coverUrl} alt="" className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-30 blur-3xl" />
       )}
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-7 pt-[max(env(safe-area-inset-top),16px)] pb-[max(env(safe-area-inset-bottom),24px)]">

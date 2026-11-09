@@ -43,6 +43,8 @@ export type Settings = {
   quality: "high" | "standard";
   radius: string;
   textSize: string;
+  customAccent: string;
+  playerColor: string | null;
 };
 
 const DEFAULTS: Settings = {
@@ -54,6 +56,8 @@ const DEFAULTS: Settings = {
   quality: "high",
   radius: "soft",
   textSize: "m",
+  customAccent: "#ff6b9d",
+  playerColor: null,
 };
 
 const KEY = "tm-settings";
@@ -79,8 +83,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         settings.theme === "dark" ||
         (settings.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
       root.classList.toggle("dark", dark);
-      const accent = ACCENTS.find((a) => a.id === settings.accent) ?? ACCENTS[0];
-      root.style.setProperty("--primary", accent.value);
+      const accent =
+        settings.accent === "custom"
+          ? settings.customAccent
+          : (ACCENTS.find((a) => a.id === settings.accent) ?? ACCENTS[0]).value;
+      root.style.setProperty("--primary", accent);
       const bg = BACKGROUNDS.find((b) => b.id === settings.background);
       const v = bg ? (dark ? bg.dark : bg.light) : null;
       if (v) root.style.setProperty("--background", v);
