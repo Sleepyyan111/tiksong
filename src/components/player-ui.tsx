@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useSettings } from "@/lib/settings";
 import {
   ChevronDown, Home, Link2, ListMusic, Pause, Play, Repeat, Repeat1, Settings, Shuffle, SkipBack, SkipForward, Volume2, Music2, History,
 } from "lucide-react";
