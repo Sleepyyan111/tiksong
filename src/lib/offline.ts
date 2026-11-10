@@ -4,9 +4,10 @@ const DB_NAME = "tiksong-offline";
 const STORE_NAME = "tracks";
 const DB_VERSION = 1;
 
-type StoredTrack = {
+export type StoredTrack = {
   track: Omit<Track, "audioUrl" | "coverUrl">;
   audio: Blob;
+  cover?: Blob | undefined;
   savedAt: number;
 };
 
@@ -39,26 +40,55 @@ async function withStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectS
   });
 }
 
-export async function getOfflineTracks(): Promise<Track[]> {
-  const stored = await withStore<StoredTrack[]>("readonly", (store) => store.getAll());
-  return stored.map(({ track }) => ({ ...track, audioUrl: undefined, coverUrl: undefined, offline: true } as Track));
+export function getAllStored(): Promise<StoredTrack[]> {
+  return withStore<StoredTrack[]>("readonly", (store) => store.getAll());
 }
 
-export async function getOfflineTrack(id: string): Promise<StoredTrack | undefined> {
+export function getOfflineTrack(id: string): Promise<StoredTrack | undefined> {
   return withStore<StoredTrack | undefined>("readonly", (store) => store.get(id));
 }
 
-export async function saveOfflineTrack(track: Track): Promise<void> {
-  if (!track.audioUrl) throw new Error("This track is not available to download right now.");
-  const response = await fetch(track.audioUrl);
-  if (!response.ok) throw new Error(`Download failed (${response.status}).`);
-  const audio = await response.blob();
+/** Fetch with byte progress and cancel support. */
+async function fetchBlob(url: string, signal: AbortSignal, onProgress?: (p: number) => void): Promise<Blob> {
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`Download failed (${res.status}).`);
+  const total = Number(res.headers.get("content-length")) || 0;
+  if (!res.body || !total || !onProgress) return res.blob();
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    onProgress(Math.min(1, got / total));
+  }
+  return new Blob(chunks as BlobPart[], { type: res.headers.get("content-type") ?? "audio/mpeg" });
+}
+
+export async function saveOfflineTrack(track: Track, signal: AbortSignal, onProgress?: (p: number) => void): Promise<StoredTrack> {
+  if (!track.audioUrl) throw new Error("This track isn't available to download right now.");
+  const audio = await fetchBlob(track.audioUrl, signal, onProgress);
   if (!audio.size) throw new Error("The downloaded audio file was empty.");
-  const { audioUrl: _audioUrl, coverUrl: _coverUrl, ...metadata } = track;
-  const stored: StoredTrack = { track: metadata, audio, savedAt: Date.now() };
+  let cover: Blob | undefined;
+  if (track.coverUrl) cover = await fetchBlob(track.coverUrl, signal).catch(() => undefined);
+  const { audioUrl: _a, coverUrl: _c, ...metadata } = track;
+  const stored: StoredTrack = { track: metadata, audio, cover, savedAt: Date.now() };
   await withStore<IDBValidKey>("readwrite", (store) => store.put(stored));
+  return stored;
 }
 
 export async function removeOfflineTrack(id: string): Promise<void> {
   await withStore<undefined>("readwrite", (store) => store.delete(id));
+}
+
+/** File extension matching the real audio type — never a fake rename. */
+export function extensionFor(type: string): string {
+  if (type.includes("mpeg") || type.includes("mp3")) return "mp3";
+  if (type.includes("mp4") || type.includes("m4a") || type.includes("aac")) return "m4a";
+  if (type.includes("ogg")) return "ogg";
+  if (type.includes("webm")) return "webm";
+  if (type.includes("wav")) return "wav";
+  return "mp3";
 }

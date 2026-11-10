@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PlayerProvider } from "@/lib/player";
+import { DownloadsProvider } from "@/lib/downloads";
 import { BottomNav, MiniPlayer, NowPlaying } from "@/components/player-ui";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function Layout() {
   return (
+    <DownloadsProvider>
     <PlayerProvider>
       <div className="mx-auto min-h-screen max-w-xl px-5 pb-44 pt-[max(env(safe-area-inset-top),20px)]">
         <Outlet />
@@ -23,5 +25,6 @@ function Layout() {
       <BottomNav />
       <NowPlaying />
     </PlayerProvider>
+    </DownloadsProvider>
   );
 }

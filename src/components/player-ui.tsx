@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import {
-  ChevronDown, Home, Link2, ListMusic, Pause, Play, Repeat, Repeat1, Settings, Shuffle, SkipBack, SkipForward, Volume2, Music2, History,
+  ChevronDown, Home, Link2, ListMusic, Pause, Play, Repeat, Repeat1, Settings, Shuffle, SkipBack, SkipForward, Volume2, Music2, History, Download, CheckCircle2,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import { usePlayer } from "@/lib/player";
 import { formatTime } from "@/lib/tiktok-url";
 import type { Track } from "@/lib/tracks";
 import { useState } from "react";
+import { useDownloads } from "@/lib/downloads";
 
 export function Cover({ track, className }: { track: Track | null; className?: string }) {
   return (
@@ -73,6 +74,7 @@ export function BottomNav() {
     { to: "/", label: "Song", icon: Home },
     { to: "/import", label: "Import", icon: Link2 },
     { to: "/history", label: "History", icon: History },
+    { to: "/downloads", label: "Downloads", icon: Download },
     { to: "/settings", label: "Settings", icon: Settings },
   ] as const;
   return (
@@ -91,6 +93,35 @@ export function BottomNav() {
         ))}
       </div>
     </nav>
+  );
+}
+
+export function DownloadButton({ track, className }: { track: Track; className?: string }) {
+  const dl = useDownloads();
+  const job = dl.jobs[track.id];
+  if (dl.isOffline(track.id)) {
+    return (
+      <button aria-label="Downloaded" onClick={() => dl.saveToDevice(track.id)} title="Save file to device" className={cn("p-2 text-primary", className)}>
+        <CheckCircle2 className="h-5 w-5" />
+      </button>
+    );
+  }
+  if (job && job.status !== "error") {
+    return (
+      <button aria-label="Cancel download" onClick={() => dl.cancel(track.id)} className={cn("p-2 text-primary", className)}>
+        <span className="relative block h-5 w-5">
+          <svg viewBox="0 0 20 20" className="h-5 w-5 -rotate-90">
+            <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.5" />
+            <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray={50.3} strokeDashoffset={50.3 * (1 - job.progress)} />
+          </svg>
+        </span>
+      </button>
+    );
+  }
+  return (
+    <button aria-label="Download" onClick={() => dl.download([track])} className={cn("p-2 text-muted-foreground", className)}>
+      <Download className="h-5 w-5" />
+    </button>
   );
 }
 
@@ -153,6 +184,7 @@ export function NowPlaying() {
           <div className="text-[1.375rem] font-bold leading-tight tracking-[-0.02em] line-clamp-2">{t?.title ?? "Nothing playing"}</div>
           <div className="type-body mt-1 text-muted-foreground truncate">{t?.artist ?? t?.creator ?? ""}</div>
         </div>
+        {t && <div className="-mr-2 -mt-10 flex justify-end"><DownloadButton track={t} /></div>}
 
         <div className="mt-6">
           <Slider value={[p.time]} max={p.duration || 1} step={0.1} onValueChange={([v]) => p.seek(v ?? 0)} />

@@ -2,16 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { GripVertical, Plus, RefreshCw, Search, Trash2, Play, Shuffle } from "lucide-react";
+import { GripVertical, Plus, RefreshCw, Search, Trash2, Play, Shuffle, Download } from "lucide-react";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/integrations/supabase/client";
 import { tracksQuery, type Track } from "@/lib/tracks";
 import { usePlayer } from "@/lib/player";
-import { Cover, Equalizer } from "@/components/player-ui";
+import { Cover, DownloadButton, Equalizer } from "@/components/player-ui";
 import { formatTime } from "@/lib/tiktok-url";
 import { cn } from "@/lib/utils";
+import { useDownloads } from "@/lib/downloads";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -29,6 +30,7 @@ function PlaylistPage() {
   const qc = useQueryClient();
   const { data = [], isLoading, refetch, isFetching } = useQuery(tracksQuery);
   const player = usePlayer();
+  const dl = useDownloads();
   const [q, setQ] = useState("");
   const tracks = useMemo(() => data.filter((t) => !t.removed), [data]);
   const shown = useMemo(() => {
@@ -97,6 +99,9 @@ function PlaylistPage() {
             className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
           >
             <Play className="h-4 w-4 fill-current" /> {player.playing ? "Pause" : "Play"}
+          </button>
+          <button aria-label="Download all" onClick={() => dl.download(tracks)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary">
+            <Download className="h-4 w-4" />
           </button>
           <button
             onClick={() => {
@@ -170,6 +175,7 @@ function Row({ track, disabled, onRemove }: { track: Track; disabled: boolean; o
           </div>
         </div>
       </button>
+      <DownloadButton track={track} className="opacity-80" />
       <button aria-label="Remove" onClick={onRemove} className="p-2 text-muted-foreground opacity-60 hover:opacity-100">
         <Trash2 className="h-4 w-4" />
       </button>

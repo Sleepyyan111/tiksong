@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useQuery } from "@tanstack/react-query";
 import { tracksQuery, type Track } from "./tracks";
 import { useSettings } from "./settings";
+import { useDownloads } from "./downloads";
 
 type Repeat = "off" | "all" | "one";
 type PlayerCtx = {
@@ -32,7 +33,19 @@ const KEY = "tm-player";
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const { data } = useQuery(tracksQuery);
   const { settings } = useSettings();
-  const queue = useMemo(() => (data ?? []).filter((t) => !t.removed && t.audioUrl), [data]);
+  const dl = useDownloads();
+  const queue = useMemo(() => {
+    const online = (data ?? []).filter((t) => !t.removed);
+    const ids = new Set(online.map((t) => t.id));
+    const merged = [
+      ...online.map((t) => {
+        const local = dl.isOffline(t.id) ? dl.localUrl(t.id) : null;
+        return local?.audio ? { ...t, audioUrl: local.audio, coverUrl: local.cover ?? t.coverUrl } : t;
+      }),
+      ...(data ? [] : dl.offline.filter((t) => !ids.has(t.id))),
+    ];
+    return merged.filter((t) => t.audioUrl);
+  }, [data, dl.offline]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
