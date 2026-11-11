@@ -15,7 +15,10 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDownloadsRouteImport } from './routes/_authenticated/downloads'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPlaylistsIndexRouteImport } from './routes/_authenticated/playlists.index'
+import { Route as AuthenticatedPlaylistsIdRouteImport } from './routes/_authenticated/playlists.$id'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -46,11 +49,28 @@ const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   path: '/import',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlaylistsIndexRoute =
+  AuthenticatedPlaylistsIndexRouteImport.update({
+    id: '/playlists/',
+    path: '/playlists/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlaylistsIdRoute =
+  AuthenticatedPlaylistsIdRouteImport.update({
+    id: '/playlists/$id',
+    path: '/playlists/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -58,15 +78,21 @@ export interface FileRoutesByFullPath {
   '/downloads': typeof AuthenticatedDownloadsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/import': typeof AuthenticatedImportRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/playlists/$id': typeof AuthenticatedPlaylistsIdRoute
+  '/playlists/': typeof AuthenticatedPlaylistsIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/downloads': typeof AuthenticatedDownloadsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/import': typeof AuthenticatedImportRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/': typeof AuthenticatedIndexRoute
+  '/playlists/$id': typeof AuthenticatedPlaylistsIdRoute
+  '/playlists': typeof AuthenticatedPlaylistsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,14 +101,35 @@ export interface FileRoutesById {
   '/_authenticated/downloads': typeof AuthenticatedDownloadsRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/playlists/$id': typeof AuthenticatedPlaylistsIdRoute
+  '/_authenticated/playlists/': typeof AuthenticatedPlaylistsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/downloads' | '/history' | '/import' | '/settings'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/downloads'
+    | '/history'
+    | '/import'
+    | '/profile'
+    | '/settings'
+    | '/playlists/$id'
+    | '/playlists/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/downloads' | '/history' | '/import' | '/settings' | '/'
+  to:
+    | '/auth'
+    | '/downloads'
+    | '/history'
+    | '/import'
+    | '/profile'
+    | '/settings'
+    | '/'
+    | '/playlists/$id'
+    | '/playlists'
   id:
     | '__root__'
     | '/_authenticated'
@@ -90,8 +137,11 @@ export interface FileRouteTypes {
     | '/_authenticated/downloads'
     | '/_authenticated/history'
     | '/_authenticated/import'
+    | '/_authenticated/profile'
     | '/_authenticated/settings'
     | '/_authenticated/'
+    | '/_authenticated/playlists/$id'
+    | '/_authenticated/playlists/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,11 +193,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/playlists/': {
+      id: '/_authenticated/playlists/'
+      path: '/playlists'
+      fullPath: '/playlists/'
+      preLoaderRoute: typeof AuthenticatedPlaylistsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/playlists/$id': {
+      id: '/_authenticated/playlists/$id'
+      path: '/playlists/$id'
+      fullPath: '/playlists/$id'
+      preLoaderRoute: typeof AuthenticatedPlaylistsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -157,16 +228,22 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDownloadsRoute: typeof AuthenticatedDownloadsRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedPlaylistsIdRoute: typeof AuthenticatedPlaylistsIdRoute
+  AuthenticatedPlaylistsIndexRoute: typeof AuthenticatedPlaylistsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDownloadsRoute: AuthenticatedDownloadsRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedPlaylistsIdRoute: AuthenticatedPlaylistsIdRoute,
+  AuthenticatedPlaylistsIndexRoute: AuthenticatedPlaylistsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

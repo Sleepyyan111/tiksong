@@ -13,6 +13,7 @@ import { Cover, DownloadButton, Equalizer } from "@/components/player-ui";
 import { formatTime } from "@/lib/tiktok-url";
 import { cn } from "@/lib/utils";
 import { useDownloads } from "@/lib/downloads";
+import { AddToPlaylist } from "@/components/add-to-playlist";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -175,6 +176,7 @@ function Row({ track, disabled, onRemove }: { track: Track; disabled: boolean; o
           </div>
         </div>
       </button>
+      <AddToPlaylist trackId={track.id} />
       <DownloadButton track={track} className="opacity-80" />
       <button aria-label="Remove" onClick={onRemove} className="p-2 text-muted-foreground opacity-60 hover:opacity-100">
         <Trash2 className="h-4 w-4" />

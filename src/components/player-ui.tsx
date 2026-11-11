@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import {
-  ChevronDown, Home, Link2, ListMusic, Pause, Play, Repeat, Repeat1, Settings, Shuffle, SkipBack, SkipForward, Volume2, Music2, History, Download, CheckCircle2,
+  ChevronDown, Home, Link2, ListMusic, UserRound, Pause, Play, Repeat, Repeat1, Settings, Shuffle, SkipBack, SkipForward, Volume2, Music2, History, Download, CheckCircle2,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
@@ -73,9 +73,9 @@ export function BottomNav() {
   const items = [
     { to: "/", label: "Song", icon: Home },
     { to: "/import", label: "Import", icon: Link2 },
-    { to: "/history", label: "History", icon: History },
+    { to: "/playlists", label: "Playlists", icon: ListMusic },
     { to: "/downloads", label: "Downloads", icon: Download },
-    { to: "/settings", label: "Settings", icon: Settings },
+    { to: "/profile", label: "Profile", icon: UserRound },
   ] as const;
   return (
     <nav className="glass fixed inset-x-0 bottom-0 z-30 border-t border-border pb-[env(safe-area-inset-bottom)]">
@@ -84,7 +84,7 @@ export function BottomNav() {
           <Link
             key={to}
             to={to}
-            activeOptions={{ exact: true }}
+            activeOptions={{ exact: to === "/" }}
             className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[0.6875rem] font-semibold text-muted-foreground transition-colors data-[status=active]:text-primary"
           >
             <Icon className="h-5 w-5" strokeWidth={2} />
