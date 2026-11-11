@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { History, Settings, ChevronRight } from "lucide-react";
+import { History, Settings, ChevronRight, Camera, Search } from "lucide-react";
+import { AvatarImg } from "@/components/avatar-img";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { profileQuery, playlistsQuery } from "@/lib/library";
+import { profileQuery, playlistsQuery, uploadAvatar } from "@/lib/library";
 import { tracksQuery } from "@/lib/tracks";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -40,6 +41,18 @@ function ProfilePage() {
     toast.success("Profile saved");
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
+  const [uploading, setUploading] = useState(false);
+  const onPick = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Pick an image"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    setUploading(true);
+    const { error } = await uploadAvatar(file);
+    setUploading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Profile picture updated");
+    qc.invalidateQueries({ queryKey: ["profile"] });
+  };
   const name = f.display_name || profile?.username || "You";
   const active = tracks.filter((t) => !t.removed);
   const mins = Math.round(active.reduce((s, t) => s + (t.duration ?? 0), 0) / 60);
@@ -47,7 +60,11 @@ function ProfilePage() {
   return (
     <div>
       <header className="flex flex-col items-center pt-8 text-center">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-4xl font-bold text-primary-foreground">{name[0]?.toUpperCase()}</div>
+        <label className="relative cursor-pointer" aria-label="Change profile picture">
+          <AvatarImg path={profile?.avatar_url} name={name} className={"h-24 w-24 text-4xl" + (uploading ? " opacity-50" : "")} />
+          <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-secondary"><Camera className="h-4 w-4" /></span>
+          <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => onPick(e.target.files?.[0])} />
+        </label>
         <h1 className="type-large mt-3">{name}</h1>
         {profile?.username && <p className="type-meta">@{profile.username}</p>}
         {f.bio && <p className="mt-2 max-w-xs text-sm text-muted-foreground">{f.bio}</p>}
@@ -69,7 +86,8 @@ function ProfilePage() {
         <button onClick={save} disabled={saving || !profile} className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
       </section>
       <section className="mt-6 overflow-hidden rounded-xl bg-secondary">
-        <Link to="/history" className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium"><History className="h-4 w-4" /> History<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
+        <Link to="/users" className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium"><Search className="h-4 w-4" /> Find people<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
+        <Link to="/history" className="flex border-t border-border items-center gap-3 px-4 py-3.5 text-sm font-medium"><History className="h-4 w-4" /> History<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
         <Link to="/settings" className="flex items-center gap-3 border-t border-border px-4 py-3.5 text-sm font-medium"><Settings className="h-4 w-4" /> Settings<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
       </section>
     </div>

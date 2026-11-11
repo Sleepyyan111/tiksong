@@ -15,6 +15,13 @@
       "when": 1794400378553,
       "tag": "0001_profiles_playlists",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794405450709,
+      "tag": "0002_avatars",
+      "breakpoints": true
     }
   ]
 }
