@@ -39,6 +39,7 @@ export type Settings = {
   accent: string;
   background: string;
   crossfade: boolean;
+  crossfadeSeconds: number;
   resumePosition: boolean;
   quality: "high" | "standard";
   radius: string;
@@ -51,6 +52,7 @@ const DEFAULTS: Settings = {
   accent: "cover",
   background: "default",
   crossfade: false,
+  crossfadeSeconds: 6,
   resumePosition: true,
   quality: "high",
   radius: "soft",

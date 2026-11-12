@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
-import { userQuery } from "@/lib/library";
+import { userQuery, discoverQuery } from "@/lib/library";
+import { SharedRow } from "./playlists.index";
 import { AvatarImg } from "@/components/avatar-img";
 
 export const Route = createFileRoute("/_authenticated/users/$id")({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/users/$id")({
 function UserPage() {
   const { id } = Route.useParams();
   const { data: u, isLoading } = useQuery(userQuery(id));
+  const { data: lists = [] } = useQuery(discoverQuery(id));
   const name = u?.display_name || u?.username || "Listener";
   return (
     <div>
@@ -31,6 +33,8 @@ function UserPage() {
           {u.bio && <p className="mt-2 max-w-xs text-sm text-muted-foreground">{u.bio}</p>}
         </header>
       )}
+      {u && <section className="mt-8"><h2 className="type-section">Public playlists</h2>
+        {lists.length === 0 ? <p className="type-meta mt-2">No public playlists yet.</p> : lists.map((p) => <SharedRow key={p.id} p={p} />)}</section>}
     </div>
   );
 }

@@ -18,10 +18,25 @@ export type Track = {
   coverUrl?: string | undefined;
 };
 
+export async function signTracks(rows: Track[]) {
+  const paths = rows.flatMap((r) => [r.audio_path, r.cover_path].filter(Boolean) as string[]);
+  if (!paths.length) return rows;
+  const { data: signed } = await supabase.storage.from("audio").createSignedUrls(paths, 60 * 60 * 12);
+  const map = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+  for (const r of rows) {
+    r.audioUrl = map.get(r.audio_path) ?? undefined;
+    r.coverUrl = r.cover_path ? map.get(r.cover_path) ?? undefined : undefined;
+  }
+  return rows;
+}
+
 async function fetchTracks(): Promise<Track[]> {
+  const { data: u } = await supabase.auth.getUser();
+  if (!u.user) return [];
   const { data, error } = await supabase
     .from("tracks")
     .select("*")
+    .eq("user_id", u.user.id)
     .order("position", { ascending: true });
   if (error) throw error;
   const rows = (data ?? []) as Track[];

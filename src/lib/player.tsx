@@ -17,7 +17,7 @@ type PlayerCtx = {
   error: string | null;
   nowPlayingOpen: boolean;
   setNowPlayingOpen: (v: boolean) => void;
-  playTrack: (id: string) => void;
+  playTrack: (id: string, context?: Track[]) => void;
   toggle: () => void;
   next: () => void;
   prev: () => void;
@@ -34,7 +34,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const { data } = useQuery(tracksQuery);
   const { settings } = useSettings();
   const dl = useDownloads();
-  const queue = useMemo(() => {
+  const [contextQueue, setContextQueue] = useState<Track[] | null>(null);
+  const libraryQueue = useMemo(() => {
     const online = (data ?? []).filter((t) => !t.removed);
     const ids = new Set(online.map((t) => t.id));
     const merged = [
@@ -46,6 +47,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     ];
     return merged.filter((t) => t.audioUrl);
   }, [data, dl.offline]);
+  const queue = useMemo(() => {
+    if (!contextQueue) return libraryQueue;
+    const lib = new Map(libraryQueue.map((t) => [t.id, t]));
+    return contextQueue.map((t) => lib.get(t.id) ?? t).filter((t) => t.audioUrl);
+  }, [contextQueue, libraryQueue]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -79,10 +85,23 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     );
   }, [currentId, shuffle, repeat, volume, Math.floor(time / 5), settings.resumePosition]);
 
-  if (typeof window !== "undefined" && !audioRef.current) {
-    audioRef.current = new Audio();
-    audioRef.current.preload = "auto";
+  // Two audio elements so the next song can fade in while the current one fades out.
+  const pair = useRef<HTMLAudioElement[]>([]);
+  if (typeof window !== "undefined" && !pair.current.length) {
+    pair.current = [new Audio(), new Audio()];
+    pair.current.forEach((a) => (a.preload = "auto"));
+    audioRef.current = pair.current[0]!;
   }
+  const fade = useRef<{ timer: number; old: HTMLAudioElement } | null>(null);
+  const volRef = useRef(volume);
+  volRef.current = volume;
+  const stopFade = () => {
+    if (!fade.current) return;
+    clearInterval(fade.current.timer);
+    fade.current.old.pause();
+    fade.current = null;
+    if (audioRef.current) audioRef.current.volume = volRef.current;
+  };
 
   // load source when track changes
   const loadedId = useRef<string | null>(null);
@@ -100,12 +119,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [current]);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
+    if (audioRef.current && !fade.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  const playTrack = useCallback((id: string) => {
+  const playTrack = useCallback((id: string, context?: Track[]) => {
+    stopFade();
     const a = audioRef.current;
-    const t = queue.find((q) => q.id === id);
+    if (context) setContextQueue(context);
+    const t = (context ?? queue).find((q) => q.id === id) ?? libraryQueue.find((q) => q.id === id);
     if (!a || !t?.audioUrl) return;
     restoredTime.current = null;
     loadedId.current = t.id;
@@ -113,7 +134,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setCurrentId(t.id);
     setError(null);
     a.play().catch((e) => setError(e.message));
-  }, [queue]);
+  }, [queue, libraryQueue]);
 
   const pickNext = useCallback(
     (dir: 1 | -1, auto = false) => {
@@ -160,15 +181,41 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (a.paused) a.play().catch((e) => setError(e.message));
-    else a.pause();
+    else { stopFade(); a.pause(); }
   }, [current, queue, playTrack]);
 
   const seek = useCallback((t: number) => {
+    stopFade();
     if (audioRef.current) audioRef.current.currentTime = t;
   }, []);
 
   // audio events
-  const handlers = useRef({ onEnded: () => {} });
+  const handlers = useRef({ onEnded: () => {}, onTime: () => {} });
+  handlers.current.onTime = () => {
+    const a = audioRef.current;
+    const secs = settings.crossfadeSeconds;
+    if (!a || !settings.crossfade || fade.current || a.paused || !a.duration || a.duration < secs * 2) return;
+    if (a.duration - a.currentTime > secs) return;
+    const id = pickNext(1, true);
+    const t = queue.find((q) => q.id === id);
+    if (!t?.audioUrl || t.id === current?.id) return;
+    const old = a;
+    const nxt = pair.current.find((x) => x !== old)!;
+    nxt.src = t.audioUrl;
+    nxt.volume = 0;
+    audioRef.current = nxt;
+    loadedId.current = t.id;
+    setCurrentId(t.id);
+    nxt.play().catch((e) => setError(e.message));
+    const start = performance.now();
+    const timer = window.setInterval(() => {
+      const k = Math.min(1, (performance.now() - start) / (secs * 1000));
+      old.volume = volRef.current * (1 - k);
+      nxt.volume = volRef.current * k;
+      if (k >= 1) stopFade();
+    }, 50);
+    fade.current = { timer, old };
+  };
   handlers.current.onEnded = () => {
     const id = pickNext(1, true);
     if (id) {
@@ -180,14 +227,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const onTime = () => setTime(a.currentTime);
-    const onDur = () => setDuration(a.duration || 0);
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-    const onEnded = () => handlers.current.onEnded();
-    const onErr = () => setError("This track couldn't be played");
+    const cleanups = pair.current.map((a) => {
+    const live = () => audioRef.current === a;
+    const onTime = () => { if (live()) { setTime(a.currentTime); handlers.current.onTime(); } };
+    const onDur = () => live() && setDuration(a.duration || 0);
+    const onPlay = () => live() && setPlaying(true);
+    const onPause = () => live() && setPlaying(false);
+    const onEnded = () => live() && handlers.current.onEnded();
+    const onErr = () => live() && setError("This track couldn't be played");
     a.addEventListener("timeupdate", onTime);
     a.addEventListener("durationchange", onDur);
     a.addEventListener("play", onPlay);
@@ -202,6 +249,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       a.removeEventListener("ended", onEnded);
       a.removeEventListener("error", onErr);
     };
+    });
+    return () => cleanups.forEach((c) => c());
   }, []);
 
   // Media Session (lock screen / headphones)

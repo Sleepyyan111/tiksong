@@ -55,6 +55,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_public: boolean
           name: string
           user_id: string
         }
@@ -62,6 +63,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_public?: boolean
           name: string
           user_id: string
         }
@@ -69,6 +71,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_public?: boolean
           name?: string
           user_id?: string
         }
@@ -100,6 +103,32 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      saved_playlists: {
+        Row: {
+          created_at: string
+          playlist_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          playlist_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          playlist_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_playlists_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tracks: {
         Row: {
@@ -154,7 +183,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_audio_path_shared: { Args: { _path: string }; Returns: boolean }
+      is_playlist_public: { Args: { _pid: string }; Returns: boolean }
+      is_track_shared: { Args: { _tid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
