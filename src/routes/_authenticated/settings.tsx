@@ -112,12 +112,12 @@ function SettingsPage() {
         <Row label="Resume where I left off">
           <Switch checked={settings.resumePosition} onCheckedChange={(resumePosition) => update({ resumePosition })} />
         </Row>
-        <Row label="Crossfade">
+        <Row label="Fade out at song end">
           <Switch checked={settings.crossfade} onCheckedChange={(crossfade) => update({ crossfade })} />
         </Row>
         {settings.crossfade && (
-          <Row label={`Crossfade length · ${settings.crossfadeSeconds}s`}>
-            <input type="range" min={1} max={12} step={1} value={settings.crossfadeSeconds} onChange={(e) => update({ crossfadeSeconds: Number(e.target.value) })} className="w-36 accent-[var(--primary)]" aria-label="Crossfade seconds" />
+          <Row label={`Fade length · ${settings.crossfadeSeconds}s`}>
+            <input type="range" min={1} max={12} step={1} value={settings.crossfadeSeconds} onChange={(e) => update({ crossfadeSeconds: Number(e.target.value) })} className="w-36 accent-[var(--primary)]" aria-label="Fade seconds" />
           </Row>
         )}
         <Row label="Import quality">

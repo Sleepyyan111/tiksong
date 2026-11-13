@@ -131,6 +131,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     restoredTime.current = null;
     loadedId.current = t.id;
     a.src = t.audioUrl;
+    a.volume = volRef.current;
     setCurrentId(t.id);
     setError(null);
     a.play().catch((e) => setError(e.message));
@@ -186,7 +187,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const seek = useCallback((t: number) => {
     stopFade();
-    if (audioRef.current) audioRef.current.currentTime = t;
+    if (audioRef.current) { audioRef.current.currentTime = t; audioRef.current.volume = volRef.current; }
   }, []);
 
   // audio events
@@ -194,33 +195,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   handlers.current.onTime = () => {
     const a = audioRef.current;
     const secs = settings.crossfadeSeconds;
-    if (!a || !settings.crossfade || fade.current || a.paused || !a.duration || a.duration < secs * 2) return;
-    if (a.duration - a.currentTime > secs) return;
-    const id = pickNext(1, true);
-    const t = queue.find((q) => q.id === id);
-    if (!t?.audioUrl || t.id === current?.id) return;
-    const old = a;
-    const nxt = pair.current.find((x) => x !== old)!;
-    nxt.src = t.audioUrl;
-    nxt.volume = 0;
-    audioRef.current = nxt;
-    loadedId.current = t.id;
-    setCurrentId(t.id);
-    nxt.play().catch((e) => setError(e.message));
-    const start = performance.now();
-    const timer = window.setInterval(() => {
-      const k = Math.min(1, (performance.now() - start) / (secs * 1000));
-      old.volume = volRef.current * (1 - k);
-      nxt.volume = volRef.current * k;
-      if (k >= 1) stopFade();
-    }, 50);
-    fade.current = { timer, old };
+    if (!a || !settings.crossfade || a.paused || !a.duration || a.duration < secs * 2) return;
+    // Fade the volume down over the last few seconds, then the next song starts normally.
+    const left = a.duration - a.currentTime;
+    a.volume = left > secs ? volRef.current : volRef.current * Math.max(0, left / secs);
   };
   handlers.current.onEnded = () => {
     const id = pickNext(1, true);
     if (id) {
       if (id === current?.id && audioRef.current) {
         audioRef.current.currentTime = 0;
+        audioRef.current.volume = volRef.current;
         audioRef.current.play();
       } else playTrack(id);
     } else setPlaying(false);
