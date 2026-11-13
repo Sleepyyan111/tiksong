@@ -29,6 +29,13 @@
       "when": 1794502415462,
       "tag": "0003_public_playlists",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794570509027,
+      "tag": "0004_roles_moderation",
+      "breakpoints": true
     }
   ]
 }

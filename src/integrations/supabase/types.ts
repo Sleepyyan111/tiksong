@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      moderation_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
       playlist_tracks: {
         Row: {
           playlist_id: string
@@ -178,17 +205,92 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bans: {
+        Row: {
+          banned_at: string
+          banned_by: string
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string
+          banned_by: string
+          user_id: string
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_audio_path_shared: { Args: { _path: string }; Returns: boolean }
+      is_banned: { Args: { _user_id: string }; Returns: boolean }
       is_playlist_public: { Args: { _pid: string }; Returns: boolean }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       is_track_shared: { Args: { _tid: string }; Returns: boolean }
+      moderate_profile: {
+        Args: { _remove_avatar: boolean; _target: string; _username: string }
+        Returns: undefined
+      }
+      my_status: { Args: never; Returns: Json }
+      set_user_admin: {
+        Args: { _admin: boolean; _target: string }
+        Returns: undefined
+      }
+      set_user_ban: {
+        Args: { _banned: boolean; _target: string }
+        Returns: undefined
+      }
+      staff_list_users: {
+        Args: { _q: string }
+        Returns: {
+          avatar_url: string
+          banned: boolean
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          role: string
+          track_count: number
+          username: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -315,6 +417,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "admin", "user"],
+    },
   },
 } as const

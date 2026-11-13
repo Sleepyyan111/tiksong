@@ -4,6 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { History, Settings, ChevronRight, Camera, Search } from "lucide-react";
 import { AvatarImg } from "@/components/avatar-img";
 import { toast } from "sonner";
+import { useQuery as useRoleQuery } from "@tanstack/react-query";
+import { myStatusQuery, RoleBadge } from "@/lib/roles";
+import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { profileQuery, playlistsQuery, uploadAvatar } from "@/lib/library";
 import { tracksQuery } from "@/lib/tracks";
@@ -53,6 +56,7 @@ function ProfilePage() {
     toast.success("Profile picture updated");
     qc.invalidateQueries({ queryKey: ["profile"] });
   };
+  const { data: status } = useRoleQuery(myStatusQuery);
   const name = f.display_name || profile?.username || "You";
   const active = tracks.filter((t) => !t.removed);
   const mins = Math.round(active.reduce((s, t) => s + (t.duration ?? 0), 0) / 60);
@@ -66,6 +70,7 @@ function ProfilePage() {
           <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => onPick(e.target.files?.[0])} />
         </label>
         <h1 className="type-large mt-3">{name}</h1>
+        <RoleBadge role={status?.role} />
         {profile?.username && <p className="type-meta">@{profile.username}</p>}
         {f.bio && <p className="mt-2 max-w-xs text-sm text-muted-foreground">{f.bio}</p>}
       </header>
@@ -86,6 +91,7 @@ function ProfilePage() {
         <button onClick={save} disabled={saving || !profile} className="h-11 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? "Saving…" : "Save"}</button>
       </section>
       <section className="mt-6 overflow-hidden rounded-xl bg-secondary">
+        {(status?.role === "owner" || status?.role === "admin") && <Link to="/admin" className="flex items-center gap-3 border-b border-border px-4 py-3.5 text-sm font-medium"><ShieldCheck className="h-4 w-4" /> {status.role === "owner" ? "Owner Dashboard" : "Admin Panel"}<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>}
         <Link to="/users" className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium"><Search className="h-4 w-4" /> Find people<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
         <Link to="/history" className="flex border-t border-border items-center gap-3 px-4 py-3.5 text-sm font-medium"><History className="h-4 w-4" /> History<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>
         <Link to="/settings" className="flex items-center gap-3 border-t border-border px-4 py-3.5 text-sm font-medium"><Settings className="h-4 w-4" /> Settings<ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" /></Link>

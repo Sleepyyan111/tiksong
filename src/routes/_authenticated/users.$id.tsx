@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { userQuery, discoverQuery } from "@/lib/library";
 import { SharedRow } from "./playlists.index";
 import { AvatarImg } from "@/components/avatar-img";
+import { UserRoleBadge } from "@/lib/roles";
 
 export const Route = createFileRoute("/_authenticated/users/$id")({
   head: () => ({
@@ -29,6 +30,7 @@ function UserPage() {
         <header className="flex flex-col items-center pt-6 text-center">
           <AvatarImg path={u.avatar_url} name={name} className="h-24 w-24 text-4xl" />
           <h1 className="type-large mt-3">{name}</h1>
+          <UserRoleBadge id={id} />
           {u.username && <p className="type-meta">@{u.username}</p>}
           {u.bio && <p className="mt-2 max-w-xs text-sm text-muted-foreground">{u.bio}</p>}
         </header>
